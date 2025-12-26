@@ -1,0 +1,11 @@
+@import "tailwindcss";
+    @utility container{
+    margin-left: auto;
+        margin-right: auto;
+      
+    }
+@theme{
+  --color-mainColor:  #F8FCFA;
+  --color-secondColor:  #0F172B;
+  --color-thrid:  #45556c;
+}
