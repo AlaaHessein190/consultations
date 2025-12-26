@@ -22,7 +22,7 @@ export const loginUser = createAsyncThunk(
 
       if (accessToken && user) {
         localStorage.setItem('authToken', accessToken);
-        localStorage.setItem('authUser', JSON.stringify(user)); // ✅ حفظ المستخدم كاملاً
+        localStorage.setItem('authUser', JSON.stringify(user));
       }
 
       return {
@@ -31,10 +31,18 @@ export const loginUser = createAsyncThunk(
         success: response.data.success,
       };
     } catch (error) {
-      if (error.response && error.response.data) {
-        return rejectWithValue(error.response.data.message || 'خطأ في تسجيل الدخول');
+      const serverMsg = error.response?.data?.message;
+
+      // ✅ ترجمة الخطأ بناءً على رد السيرفر الذي رأيناه في الكونسول
+      if (serverMsg === "Email or password is wrong") {
+        return rejectWithValue('البريد الإلكتروني أو كلمة المرور غير صحيحة');
       }
-      return rejectWithValue(error.message || 'حدث خطأ غير متوقع');
+
+      // معالجة أخطاء أخرى مثل عدم وجود إنترنت أو خطأ سيرفر عام
+      if (error.response && error.response.data) {
+        return rejectWithValue(serverMsg || 'خطأ في تسجيل الدخول');
+      }
+      return rejectWithValue('حدث خطأ غير متوقع في الاتصال');
     }
   }
 );
@@ -147,6 +155,58 @@ export const resendCode = createAsyncThunk(
   }
 );
 
+// 5. طلب استعادة كلمة المرور (إرسال الكود للإيميل)
+export const forgetPassword = createAsyncThunk(
+  'auth/forgetPassword',
+  async ({ email }, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.patch('/api/v1/auth/forgetPassword', { email });
+      return response.data;
+    } catch (error) {
+      // استخراج الرسالة من السيرفر
+      const serverMsg = error.response?.data?.message;
+
+      // التأكد من ترجمة الرسالة التي ظهرت في الكونسول عندك
+      if (serverMsg === "Email or password is wrong") {
+        return rejectWithValue('عذراً، هذا البريد الإلكتروني غير مسجل لدينا');
+      }
+
+      return rejectWithValue(serverMsg || 'فشل إرسال كود الاستعادة');
+    }
+  }
+);
+
+// 6. تعيين كلمة مرور جديدة
+// ملاحظة: استخدمت rest-Password كما هي في الـ API الخاص بك
+export const resetPassword = createAsyncThunk(
+  'auth/resetPassword',
+  async ({ email, code, newPassword }, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.patch('/api/v1/auth/rest-Password', { 
+        email, 
+        code, 
+        password: newPassword 
+      });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'فشل تغيير كلمة المرور');
+    }
+  }
+);
+
+// 7. إعادة إرسال كود كلمة المرور
+export const resendPasswordCode = createAsyncThunk(
+  'auth/resendPasswordCode',
+  async ({ email }, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.post('/api/v1/auth/resendPassword', { email });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'فشل إعادة إرسال الكود');
+    }
+  }
+);
+
 const authSlice = createSlice({
   name: 'auth',
   initialState: {
@@ -237,6 +297,19 @@ const authSlice = createSlice({
       .addCase(resendCode.rejected, (state, action) => {
         state.resendLoading = false;
         state.error = action.payload;
+      })
+      // Forget Password
+      .addCase(forgetPassword.pending, (state) => { state.loading = true; })
+      .addCase(forgetPassword.fulfilled, (state) => { state.loading = false; state.success = true; })
+      .addCase(forgetPassword.rejected, (state, action) => { state.loading = false; state.error = action.payload; 
+
+      })
+
+      // Reset Password
+      .addCase(resetPassword.pending, (state) => { state.loading = true; })
+      .addCase(resetPassword.fulfilled, (state) => { state.loading = false; state.success = true; })
+      .addCase(resetPassword.rejected, (state, action) => { state.loading = false; state.error = action.payload; 
+
       });
   },
 });

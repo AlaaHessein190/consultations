@@ -3,7 +3,6 @@ import Layout from './components/layout/Layout';
 import Home from './pages/home/Home';
 import Login from './pages/Auth/Login/Login';
 import Regster from './pages/Auth/regester/Regster';
-import Forget from './pages/Auth/Forget/Forget';
 import { useEffect } from 'react';
 import AOS from 'aos';
 import { Toaster } from 'react-hot-toast';
@@ -20,6 +19,7 @@ import ProfileSettings from './pages/ProfileSettings/ProfileSettings';
 import PaymentsPage from './pages/Payments/PaymentsPage';
 import BookingPage from './pages/BookingPage/BookingPage';
 import DashboardPage from './pages/DashboardConsults/DashboardPage';
+import ForgetPassword from './pages/Auth/ForgetPassword/ForgetPassword';
 
 // ----------------------------------------------------
 // 1. مكون حماية مسارات الخبير (Expert Only)
@@ -84,7 +84,7 @@ function App() {
         { path: "regster", element: <PublicRoute><Regster /></PublicRoute> },
 
         { path: "verify-email", element: <VerifyEmailPage /> }, 
-        { path: "forget", element: <Forget /> }, 
+        { path: "forget", element: <ForgetPassword /> }, 
 
         // مسارات العملاء فقط
         { 
@@ -113,8 +113,7 @@ function App() {
       ]
     },
 
-    // مسار البوابة (Portal) - متاح للجميع (أو يمكنك حمايته بـ ExpertRoute إذا كان للخبير فقط)
-    // حذفنا PublicRoute من هنا لكي لا يطرد المستشار عند الضغط على "عودة"
+    
     { 
       path: "registrationportal", 
       element: <RegistrationPortal /> 
@@ -138,11 +137,12 @@ function App() {
     },
   ]);
 
-  return (
-    <RouterProvider router={routers}>
-      <Toaster />
-    </RouterProvider>
-  );
+return (
+  <>
+    <RouterProvider router={routers} />
+    <Toaster position="top-center" reverseOrder={false} />
+  </>
+);
 }
 
 export default App;
