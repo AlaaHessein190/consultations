@@ -40,7 +40,7 @@ const ClientRoute = ({ children }) => {
 
   if (!token) return <Navigate to="/login" replace />;
   // إذا كان المستخدم خبيراً وحاول دخول صفحة العملاء، نرجعه للداشبورد الخاص به
-  if (role === 'expert') return <Navigate to="/dash" replace />;
+  if (role === 'expert') return <Navigate to="/dashexpert" replace />;
   
   return children;
 };
@@ -53,7 +53,7 @@ const PublicRoute = ({ children }) => {
   if (token) {
     const role = user?.accountType || user?.role;
     // توجيه ذكي بناءً على النوع
-    return role === 'expert' ? <Navigate to="/dash" replace /> : <Navigate to="/consultants" replace />;
+    return role === 'expert' ? <Navigate to="/dashexpert" replace /> : <Navigate to="/consultants" replace />;
   }
   return children;
 };

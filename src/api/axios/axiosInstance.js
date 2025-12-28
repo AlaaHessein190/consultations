@@ -15,7 +15,7 @@ const axiosInstance = axios.create({
 
 axiosInstance.interceptors.request.use(
     (config) => {
-        const token = localStorage.getItem('userToken'); // جلب الـ Token من الـ Local Storage
+        const token = localStorage.getItem('authToken'); // جلب الـ Token من الـ Local Storage
         if (token) {
             config.headers.Authorization = `Bearer ${token}`; // إضافة الـ Token في الـ Header
         }
@@ -33,7 +33,9 @@ axiosInstance.interceptors.response.use(
         if (error.response && error.response.status === 401) {
             // هنا ممكن تعمل إعادة توجيه لصفحة تسجيل الدخول أو مسح الـ Token
             console.log('Authentication error, redirecting to login...');
-            localStorage.removeItem('userToken');
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('authUser');
+            window.location.href = '/login';
         }
         return Promise.reject(error);
     }
