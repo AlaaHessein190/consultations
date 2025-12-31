@@ -20,6 +20,9 @@ import PaymentsPage from './pages/Payments/PaymentsPage';
 import BookingPage from './pages/BookingPage/BookingPage';
 import DashboardPage from './pages/DashboardConsults/DashboardPage';
 import ForgetPassword from './pages/Auth/ForgetPassword/ForgetPassword';
+// 1. استيراد الأكشن من سلايس اليوزر
+import { fetchMe } from './redux/slices/userSlice'; 
+import { useDispatch } from 'react-redux';
 
 // ----------------------------------------------------
 // 1. مكون حماية مسارات الخبير (Expert Only)
@@ -60,12 +63,21 @@ const PublicRoute = ({ children }) => {
 // ----------------------------------------------------
 
 function App() {
+   const dispatch = useDispatch();
+  // 2. جلب التوكن من الـ Auth للتأكد أن المستخدم مسجل دخول
+  const { token } = useSelector((state) => state.auth);
+
   useEffect(() => {
     AOS.init({
       duration: 1000,
       once: true,
     });
-  }, []);
+
+    // 3. إذا وجدنا توكن، اطلب بيانات المستخدم الحقيقية فوراً
+    if (token) {
+      dispatch(fetchMe());
+    }
+  }, [dispatch, token]); 
 
   const routers = createBrowserRouter([
     {

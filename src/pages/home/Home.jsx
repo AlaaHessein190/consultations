@@ -49,7 +49,7 @@ function Home() {
         <Testmolins />
       </div>
 
-      <div data-aos="fade-up">
+      <div >
         <Advisor />
       </div>
     </>

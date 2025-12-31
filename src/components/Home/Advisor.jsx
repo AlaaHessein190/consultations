@@ -37,7 +37,7 @@ function Advisor() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
           {/* المحتوى النصي */}
-          <div data-aos="fade-left">
+          <div data-aos="fade-up">
             <h3 className="text-lg md:text-xl font-semibold text-gray-800 mb-4 leading-relaxed">
               انضم إلى شبكتنا ووسع نطاق عملك ووصولك إلى عملاء جدد من جميع أنحاء العالم العربي.
             </h3>
@@ -67,7 +67,7 @@ function Advisor() {
           {/* الإحصائيات */}
           <div
             className="grid grid-cols-2 gap-4 border p-4 rounded-xl"
-            data-aos="fade-right"
+            data-aos="fade-up"
           >
             {stats.map((stat, i) => (
               <div

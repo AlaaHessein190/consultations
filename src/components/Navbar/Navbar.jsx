@@ -31,19 +31,21 @@ function Navbar() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  // جلب البيانات من ريدكس (التي أصبحت تُستعاد الآن عند الريفريش)
-  const { token, user } = useSelector((state) => state.auth);
+  // 1. جلب البيانات من الـ Auth والـ User Slice (البيانات الحقيقية)
+  const { token, user: authUser } = useSelector((state) => state.auth);
+  const { profileData } = useSelector((state) => state.user); 
+  
   const isLoggedIn = !!token;
 
-  // التحقق من نوع الحساب (مستشار/خبير)
-  const isConsultant = isLoggedIn && (
-    user?.role === "expert" || 
-    user?.accountType === "expert"
-  );
+  // 2. توحيد البيانات (الأولوية لبيانات السيرفر profileData)
+  const displayName = profileData?.username || authUser?.username || "مستخدم";
+  const displayRole = profileData?.role === "expert" ? "خبير" : "عميل";
+  const avatarUrl = profileData?.avatar?.url;
+  const userInitial = displayName.charAt(0).toUpperCase();
 
-  const userInitial = user?.username
-    ? user.username.charAt(0).toUpperCase()
-    : "م";
+  const isConsultant = isLoggedIn && (
+    profileData?.role === "expert" || authUser?.role === "expert"
+  );
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -59,6 +61,7 @@ function Navbar() {
     dispatch(logoutUser());
     navigate("/login");
     setProfileMenuOpen(false);
+    setMenuOpen(false);
   };
 
   // =========================================================
@@ -70,7 +73,7 @@ function Navbar() {
         <div className="container mx-auto flex items-center justify-between gap-4">
           <div className="text-right">
             <h2 className="text-2xl font-bold text-gray-800 leading-tight">لوحة التحكم</h2>
-            <p className="text-gray-500 text-sm">مرحباً بك د. {user?.username}</p>
+            <p className="text-gray-500 text-sm">مرحباً بك د. {displayName}</p>
           </div>
 
           <div className="flex items-center gap-3 flex-wrap">
@@ -90,8 +93,7 @@ function Navbar() {
               <FaArrowRight className="text-sm" /> <span>العودة</span>
             </Link>
             
-            {/* زر تسجيل الخروج للمستشار أيضاً */}
-            <button onClick={handleLogout} className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-all" title="تسجيل الخروج">
+            <button onClick={handleLogout} className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-all cursor-pointer" title="تسجيل الخروج">
                 <FaSignOutAlt />
             </button>
           </div>
@@ -129,11 +131,11 @@ function Navbar() {
         <div className="hidden md:flex items-center gap-4">
           {!isLoggedIn && (
             <div className="flex items-center gap-2 relative" ref={searchRef}>
-              <form onSubmit={(e) => { e.preventDefault(); console.log(search); }} className={`flex items-center gap-2 border rounded-xl p-1 transition-all duration-300 overflow-hidden ${searchOpen ? "w-64 opacity-100" : "w-0 opacity-0"}`}>
+              <form onSubmit={(e) => { e.preventDefault(); }} className={`flex items-center gap-2 border rounded-xl p-1 transition-all duration-300 overflow-hidden ${searchOpen ? "w-64 opacity-100" : "w-0 opacity-0"}`}>
                 <input type="text" placeholder="ابحث هنا..." className="outline-none px-2 py-1 w-full" value={search} onChange={(e) => setSearch(e.target.value)} />
                 <button type="submit" className="p-2"><FaSearch /></button>
               </form>
-              <button onClick={() => setSearchOpen(!searchOpen)} className="p-3 bg-secondColor rounded-2xl text-white hover:bg-white hover:text-black hover:border duration-200">
+              <button onClick={() => setSearchOpen(!searchOpen)} className="p-3 bg-secondColor rounded-2xl text-white hover:bg-white hover:text-black hover:border duration-200 cursor-pointer">
                 <FaSearch />
               </button>
             </div>
@@ -143,31 +145,37 @@ function Navbar() {
             <>
               <Link to="/notifications" className="relative p-3 rounded-2xl bg-gray-200 text-gray-700 hover:bg-gray-300 duration-200">
                 <FaBell size={20} />
-                <span className="absolute top-1 right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">2</span>
+                <span className="absolute top-1 right-1 bg-red-500 text-white text-[10px] rounded-full h-4 w-4 flex items-center justify-center border border-white">2</span>
               </Link>
               <Link to="/messages" className="relative p-3 rounded-2xl bg-gray-200 text-gray-700 hover:bg-gray-300 duration-200">
                 <FaComment size={20} />
-                <span className="absolute top-1 right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">3</span>
+                <span className="absolute top-1 right-1 bg-red-500 text-white text-[10px] rounded-full h-4 w-4 flex items-center justify-center border border-white">3</span>
               </Link>
 
               <div className="relative" ref={profileMenuRef}>
-                <button onClick={() => setProfileMenuOpen(!profileMenuOpen)} className="flex items-center gap-2 p-2 rounded-2xl hover:bg-gray-100 duration-200">
-                  <div className="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center text-lg font-bold overflow-hidden">
-                    {user?.profilePicture ? <img src={user.profilePicture} alt="profile" className="w-full h-full object-cover" /> : userInitial}
+                <button onClick={() => setProfileMenuOpen(!profileMenuOpen)} className="flex items-center gap-2 p-2 rounded-2xl hover:bg-gray-100 duration-200 cursor-pointer">
+                  {/* عرض الصورة الحقيقية أو الحرف */}
+                  <div className="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center text-lg font-bold overflow-hidden shadow-sm">
+                    {avatarUrl && !avatarUrl.includes('default') ? (
+                      <img src={avatarUrl} alt="profile" className="w-full h-full object-cover" />
+                    ) : (
+                      userInitial
+                    )}
                   </div>
-                  <span className="font-semibold text-gray-800">
-                    {user?.username || "مستخدم"}
-                    <span className="block text-xs font-normal text-gray-500">عميل</span>
+                  <span className="font-semibold text-gray-800 text-right">
+                    {displayName}
+                    <span className="block text-[10px] font-normal text-gray-500">{displayRole}</span>
                   </span>
-                  <FaChevronDown className={`transition-transform ${profileMenuOpen ? "rotate-180" : ""}`} />
+                  <FaChevronDown className={`text-xs transition-transform ${profileMenuOpen ? "rotate-180" : ""}`} />
                 </button>
 
                 {profileMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10">
-                    <Link to="/dashboardclient" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={() => setProfileMenuOpen(false)}>
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10 text-right overflow-hidden">
+                    <Link to="/dashboardclient" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 font-medium" onClick={() => setProfileMenuOpen(false)}>
                       <FaUserCircle className="inline-block ml-2" /> الملف الشخصي
                     </Link>
-                    <button onClick={handleLogout} className="flex items-center w-full text-right px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                    {/* التعديل: جعل زر تسجيل الخروج في اليمين (justify-end في RTL) */}
+                    <button onClick={handleLogout} className="flex items-center justify-end w-full px-4 py-2 text-sm text-red-500 hover:bg-gray-100 font-medium cursor-pointer">
                       <FaSignOutAlt className="inline-block ml-2" /> تسجيل الخروج
                     </button>
                   </div>
@@ -184,24 +192,30 @@ function Navbar() {
           )}
         </div>
 
-        {/* Mobile Toggle */}
         <div className="md:hidden flex items-center gap-2">
-            <button onClick={() => setMenuOpen(!menuOpen)} className="text-2xl">{menuOpen ? <FaTimes /> : <FaBars />}</button>
+            <button onClick={() => setMenuOpen(!menuOpen)} className="text-2xl text-gray-700 cursor-pointer">
+                {menuOpen ? <FaTimes /> : <FaBars />}
+            </button>
         </div>
       </div>
 
       {/* Mobile Menu Content */}
       {menuOpen && (
-        <div className="md:hidden bg-white border-t p-4 flex flex-col gap-3">
+        <div className="md:hidden bg-white border-t p-4 flex flex-col gap-3 text-right">
             {isLoggedIn ? (
                 <>
-                    <Link to="/profilePage" onClick={() => setMenuOpen(false)}>الملف الشخصي</Link>
-                    <button onClick={handleLogout} className="text-right text-red-500">تسجيل الخروج</button>
+                    <Link className="py-2 border-b" to="/" onClick={() => setMenuOpen(false)}>الرئيسية</Link>
+                    <Link className="py-2 border-b" to="/consultants" onClick={() => setMenuOpen(false)}>المستشارون</Link>
+                    <Link className="py-2 border-b" to="/aboutPage" onClick={() => setMenuOpen(false)}>من نحن</Link>
+                    <Link className="py-2 border-b" to="/faq" onClick={() => setMenuOpen(false)}>الأسئلة الشائعة</Link>
+                    <Link className="py-2 border-b" to="/contact" onClick={() => setMenuOpen(false)}>اتصل بنا</Link>
+                    <Link className="py-2 border-b text-blue-600" to="/dashboardclient" onClick={() => setMenuOpen(false)}>الملف الشخصي</Link>
+                    <button onClick={handleLogout} className="text-right text-red-500 py-2 cursor-pointer font-medium">تسجيل الخروج</button>
                 </>
             ) : (
                 <>
-                    <Link to="/login" onClick={() => setMenuOpen(false)}>تسجيل الدخول</Link>
-                    <Link to="/regster" onClick={() => setMenuOpen(false)}>إنشاء حساب</Link>
+                    <Link className="py-2 border-b" to="/login" onClick={() => setMenuOpen(false)}>تسجيل الدخول</Link>
+                    <Link className="py-2 border-b" to="/regster" onClick={() => setMenuOpen(false)}>إنشاء حساب</Link>
                 </>
             )}
         </div>
