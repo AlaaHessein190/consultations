@@ -76,6 +76,7 @@ export const registerUser = createAsyncThunk(
         response = await axiosInstance.post(endpoint, formData, {
           headers: { 'Content-Type': 'multipart/form-data' },
         });
+        console.log(response);
 
       } else { 
         // منطق العميل (Client)
@@ -90,6 +91,7 @@ export const registerUser = createAsyncThunk(
           }
         }
         response = await axiosInstance.post(endpoint, jsonData);
+        console.log(response);
       }
 
       const accessToken = response.data.data?.accessToken || null;

@@ -1,4 +1,4 @@
-import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom';
+import { createBrowserRouter, RouterProvider, Navigate, Outlet } from 'react-router-dom';
 import Layout from './components/layout/Layout';
 import Home from './pages/home/Home';
 import Login from './pages/Auth/Login/Login';
@@ -9,7 +9,7 @@ import { Toaster } from 'react-hot-toast';
 import Consultants from './pages/Consultants/Consultants';
 import ProfilePage from './pages/ProfilePage/ProfilePage';
 import VerifyEmailPage from './pages/Auth/VerifyEmailPage/VerifyEmailPage';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import ContactUsPage from './pages/ContactUsPage/ContactUsPage';
 import FaqPagee from './pages/FaqPagee/FaqPagee';
 import AboutPage from './pages/About/AboutPage';
@@ -20,12 +20,28 @@ import PaymentsPage from './pages/Payments/PaymentsPage';
 import BookingPage from './pages/BookingPage/BookingPage';
 import DashboardPage from './pages/DashboardConsults/DashboardPage';
 import ForgetPassword from './pages/Auth/ForgetPassword/ForgetPassword';
-// 1. استيراد الأكشن من سلايس اليوزر
+
+// استيراد مكونات الأدمن
+import AdminDashboard from './pages/Admin/AdminDashboard'; 
+import WaitingApproval from './pages/Auth/WaitingApproval/WaitingApproval';
+import AdminSidebar from './components/Admin/AdminSidebar'; // جديد
+
+// استيراد الأكشن من سلايس اليوزر
 import { fetchMe } from './redux/slices/userSlice'; 
-import { useDispatch } from 'react-redux';
 
 // ----------------------------------------------------
-// 1. مكون حماية مسارات الخبير (Expert Only)
+// 1. مكون حماية مسارات الأدمن
+const AdminRoute = ({ children }) => {
+  const { token, user } = useSelector((state) => state.auth);
+  const role = user?.accountType || user?.role;
+
+  if (!token) return <Navigate to="/login" replace />;
+  if (role !== 'admin') return <Navigate to="/" replace />;
+  
+  return children;
+};
+
+// 2. مكون حماية مسارات الخبير
 const ExpertRoute = ({ children }) => {
   const { token, user } = useSelector((state) => state.auth);
   const role = user?.accountType || user?.role;
@@ -36,47 +52,49 @@ const ExpertRoute = ({ children }) => {
   return children;
 };
 
-// 2. مكون حماية مسارات العميل (Client Only)
+// 3. مكون حماية مسارات العميل
 const ClientRoute = ({ children }) => {
   const { token, user } = useSelector((state) => state.auth);
   const role = user?.accountType || user?.role;
 
   if (!token) return <Navigate to="/login" replace />;
-  // إذا كان المستخدم خبيراً وحاول دخول صفحة العملاء، نرجعه للداشبورد الخاص به
   if (role === 'expert') return <Navigate to="/dashexpert" replace />;
   
   return children;
 };
 
-// 3. مكون المسارات العامة (توجيه ذكي عند تسجيل الدخول)
-// يمنع المستخدم المسجل من رؤية صفحة Login و Register
+// 4. مكون المسارات العامة
 const PublicRoute = ({ children }) => {
   const { token, user } = useSelector((state) => state.auth);
   
   if (token) {
     const role = user?.accountType || user?.role;
-    // توجيه ذكي بناءً على النوع
+    if (role === 'admin') return <Navigate to="/admin/dashboard" replace />;
     return role === 'expert' ? <Navigate to="/dashexpert" replace /> : <Navigate to="/consultants" replace />;
   }
   return children;
 };
+
+// 5. مكون لاي أوت الأدمن الجديد (Admin Layout)
+const AdminLayout = () => {
+  return (
+    <div className="flex bg-[#F9FBFF] min-h-screen" dir="rtl">
+      <AdminSidebar />
+      <main className="flex-1 md:mr-64"> {/* الـ margin لضمان عدم تداخل السايد بار مع المحتوى */}
+        <Outlet />
+      </main>
+    </div>
+  );
+};
 // ----------------------------------------------------
 
 function App() {
-   const dispatch = useDispatch();
-  // 2. جلب التوكن من الـ Auth للتأكد أن المستخدم مسجل دخول
+  const dispatch = useDispatch();
   const { token } = useSelector((state) => state.auth);
 
   useEffect(() => {
-    AOS.init({
-      duration: 1000,
-      once: true,
-    });
-
-    // 3. إذا وجدنا توكن، اطلب بيانات المستخدم الحقيقية فوراً
-    if (token) {
-      dispatch(fetchMe());
-    }
+    AOS.init({ duration: 1000, once: true });
+    if (token) { dispatch(fetchMe()); }
   }, [dispatch, token]); 
 
   const routers = createBrowserRouter([
@@ -85,57 +103,39 @@ function App() {
       element: <Layout />,
       children: [
         { index: true, element: <Home /> }, 
-
-        // مسارات عامة للجميع
         { path: "contact", element: <ContactUsPage /> }, 
         { path: "faq", element: <FaqPagee /> },
         { path: "aboutPage", element: <AboutPage /> },
-
-        // مسارات تمنع المسجلين من العودة إليها (Login/Register)
         { path: "login", element: <PublicRoute><Login /></PublicRoute> },
         { path: "regster", element: <PublicRoute><Regster /></PublicRoute> },
-
         { path: "verify-email", element: <VerifyEmailPage /> }, 
         { path: "forget", element: <ForgetPassword /> }, 
+        { path: "waiting-approval", element: <WaitingApproval /> },
 
         // مسارات العملاء فقط
-        { 
-          path: "consultants", 
-          element: <ClientRoute><Consultants /></ClientRoute> 
-        },
-        { 
-          path: "ProfilePage", 
-          element: <ClientRoute><ProfilePage /></ClientRoute> 
-        },
-         { 
-          path: "BookingPage", 
-          element: <ClientRoute><BookingPage /></ClientRoute> 
-        },
-        { 
-          path: "dashboardclient", 
-          element: <ClientRoute><DashboardPage /></ClientRoute> 
-        },
+        { path: "consultants", element: <ClientRoute><Consultants /></ClientRoute> },
+        { path: "ProfilePage", element: <ClientRoute><ProfilePage /></ClientRoute> },
+        { path: "BookingPage", element: <ClientRoute><BookingPage /></ClientRoute> },
+        { path: "dashboardclient", element: <ClientRoute><DashboardPage /></ClientRoute> },
         
         // مسارات الخبراء فقط
-        { 
-          path: "dashexpert", 
-          element: <ExpertRoute><Dashexpertpage /></ExpertRoute> 
-        }, 
-
+        { path: "dashexpert", element: <ExpertRoute><Dashexpertpage /></ExpertRoute> }, 
       ]
     },
 
-    
-    { 
-      path: "registrationportal", 
-      element: <RegistrationPortal /> 
+    // مسارات الأدمن (بهيكل منفصل عن الـ Layout الرئيسي)
+    {
+      path: "/admin",
+      element: <AdminRoute><AdminLayout /></AdminRoute>,
+      children: [
+        { path: "dashboard", element: <AdminDashboard /> },
+        // مستقبلاً يمكنك إضافة /admin/users هنا
+      ]
     },
-            { path: "profile-settings", element: <ExpertRoute><ProfileSettings /></ExpertRoute> },
-
-            { path: "payments", element: <ExpertRoute><PaymentsPage /></ExpertRoute> },
-
-
-
+    
+    { path: "registrationportal", element: <RegistrationPortal /> },
+    { path: "profile-settings", element: <ExpertRoute><ProfileSettings /></ExpertRoute> },
+    { path: "payments", element: <ExpertRoute><PaymentsPage /></ExpertRoute> },
 
     {
       path: "*",
@@ -149,12 +149,12 @@ function App() {
     },
   ]);
 
-return (
-  <>
-    <RouterProvider router={routers} />
-    <Toaster position="top-center" reverseOrder={false} />
-  </>
-);
+  return (
+    <>
+      <RouterProvider router={routers} />
+      <Toaster position="top-center" reverseOrder={false} />
+    </>
+  );
 }
 
 export default App;

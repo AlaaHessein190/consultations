@@ -21,8 +21,40 @@ export const updateMe = createAsyncThunk(
       dispatch(fetchMe()); 
       return response.data;
     } catch (error) {
-      // تمرير كائن الخطأ الكامل ليتمكن المكون من قراءة رسائل الـ Validation
       return rejectWithValue(error.response?.data || 'حدث خطأ أثناء التحديث');
+    }
+  }
+);
+
+// --- تعديل رفع السيرة الذاتية بناءً على الصورة ---
+export const updateCV = createAsyncThunk(
+  'user/updateCV',
+  async (file, { rejectWithValue, dispatch }) => {
+    try {
+      const formData = new FormData();
+      formData.append('cv', file); // تأكد أن المفتاح 'cv' هو ما يتوقعه الباك إند
+      const response = await axiosInstance.post('/api/v1/users/upload-cv', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      dispatch(fetchMe()); 
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'فشل رفع السيرة الذاتية');
+    }
+  }
+);
+
+// حذف السيرة الذاتية (بافتراض وجود endpoint للحذف أو إرسال null)
+export const removeCV = createAsyncThunk(
+  'user/removeCV',
+  async (_, { rejectWithValue, dispatch }) => {
+    try {
+      // إذا كان الباك إند يوفر endpoint خاص للحذف:
+      await axiosInstance.delete('/api/v1/users/delete-cv');
+      dispatch(fetchMe()); 
+      return { success: true };
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'فشل حذف الملف');
     }
   }
 );
@@ -68,15 +100,14 @@ const userSlice = createSlice({
       .addCase(fetchMe.pending, (state) => { state.loading = true; state.error = null; })
       .addCase(fetchMe.fulfilled, (state, action) => { state.loading = false; state.profileData = action.payload; })
       .addCase(fetchMe.rejected, (state, action) => { state.loading = false; state.error = action.payload; })
-      .addCase(updateMe.pending, (state) => { state.loading = true; state.error = null; })
-      .addCase(updateMe.fulfilled, (state) => { state.loading = false; })
-      .addCase(updateMe.rejected, (state, action) => { state.loading = false; state.error = action.payload; })
+      
+      // التعامل مع حالات الرفع (CV و Avatar) لظهور لودر موحد إذا أردت
       .addMatcher(
-        (action) => action.type.endsWith('/pending') && (action.type.includes('updateAvatar') || action.type.includes('removeAvatar')),
+        (action) => action.type.endsWith('/pending') && (action.type.includes('Avatar') || action.type.includes('CV')),
         (state) => { state.uploading = true; }
       )
       .addMatcher(
-        (action) => (action.type.endsWith('/fulfilled') || action.type.endsWith('/rejected')) && (action.type.includes('updateAvatar') || action.type.includes('removeAvatar')),
+        (action) => (action.type.endsWith('/fulfilled') || action.type.endsWith('/rejected')) && (action.type.includes('Avatar') || action.type.includes('CV')),
         (state) => { state.uploading = false; }
       );
   },
