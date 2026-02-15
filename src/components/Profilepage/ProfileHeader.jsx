@@ -1,33 +1,34 @@
-// src/components/ProfileHeader.jsx
 import React from 'react';
 
-const ProfileHeader = ({ name, title, rating, reviewsCount, experience, imageUrl }) => {
+const ProfileHeader = ({ name, title, rating, reviewsCount, experience, imageUrl, about }) => {
   return (
-    <div className="flex items-center p-4 bg-white rounded-lg shadow-sm mb-4">
-      <div className="relative">
+    <div className="flex items-center p-6 bg-white rounded-2xl shadow-sm mb-4 text-right border border-gray-50" dir="rtl">
+      <div className="relative shrink-0">
         <img
           src={imageUrl}
           alt={name}
-          className="w-24 h-24 rounded-full border-2 border-indigo-500 object-cover"
+          className="w-28 h-28 rounded-full border-2 border-indigo-500 object-cover shadow-md"
         />
-        <span className="absolute bottom-0 right-0 bg-green-500 text-white text-xs px-2 py-1 rounded-full">متصل</span>
+        <span className="absolute bottom-1 right-1 bg-green-500 text-white text-[10px] px-2 py-0.5 rounded-full border-2 border-white font-bold">متصل</span>
       </div>
-      <div className="ml-4">
-        <h1 className="text-xl font-bold text-gray-900">{name}</h1>
-        <p className="text-sm text-gray-600">{title}</p>
-        <div className="flex items-center mt-1">
-          <span className="text-yellow-500 font-bold mr-1">{rating}</span>
-          <span className="text-gray-500 text-sm">({reviewsCount} تقييم)</span>
-          <span className="mx-2 text-gray-400">•</span>
-          <span className="text-gray-500 text-sm">{experience} سنة خبرة</span>
+      <div className="mr-6 flex-1">
+        <h1 className="text-2xl font-black text-gray-900">{name}</h1>
+        <p className="text-sm text-indigo-600 font-bold mb-2">{title || "مستشار متخصص"}</p>
+        
+        <div className="flex items-center text-sm mb-3">
+          <span className="text-yellow-500 font-bold ml-1">★ {rating || 5}</span>
+          <span className="text-gray-400">({reviewsCount || 0} تقييم)</span>
+          <span className="mx-3 text-gray-200">|</span>
+          <span className="text-gray-600 font-medium">{experience || 0} سنة خبرة</span>
         </div>
-        <p className="text-sm text-gray-700 mt-2 max-w-md">
-          استشاري قانوني معتمد بخبرة {experience} عاماً في المجال القانوني التجاري والشركات، متخصص في صياغة ومراجعة العقود التجارية، والاستشارات القانونية للمؤسسات والشركات الناشئة.
+        
+        <p className="text-sm text-gray-500 max-w-2xl leading-relaxed">
+          {about || "لا توجد نبذة تعريفية متاحة حالياً."}
         </p>
-        <div className="mt-3 flex space-x-2">
-          <button className="bg-indigo-600 text-white text-sm px-4 py-2 rounded-md hover:bg-indigo-700">تواصل الآن</button>
-          <button className="bg-gray-200 text-gray-800 text-sm px-4 py-2 rounded-md hover:bg-gray-300">رسالة</button>
-          <button className="bg-gray-200 text-gray-800 text-sm px-4 py-2 rounded-md hover:bg-gray-300">متابعة</button>
+
+        <div className="mt-4 flex gap-3">
+          <button className="bg-indigo-600 text-white text-xs font-bold px-6 py-2.5 rounded-xl hover:bg-indigo-700 transition shadow-sm shadow-indigo-100">تواصل الآن</button>
+          <button className="bg-gray-100 text-gray-700 text-xs font-bold px-6 py-2.5 rounded-xl hover:bg-gray-200 transition">رسالة</button>
         </div>
       </div>
     </div>

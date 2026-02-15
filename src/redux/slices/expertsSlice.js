@@ -59,6 +59,8 @@ const expertsSlice = createSlice({
       .addCase(fetchAllExperts.pending, (state) => { state.loading = true; })
       .addCase(fetchAllExperts.fulfilled, (state, action) => {
         state.loading = false;
+          console.log("البيانات القادمة من السيرفر:", action.payload); 
+
         state.allExperts = action.payload;
       })
       .addCase(fetchAllExperts.rejected, (state, action) => {

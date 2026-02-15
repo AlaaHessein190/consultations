@@ -25,7 +25,7 @@ import ForgetPassword from './pages/Auth/ForgetPassword/ForgetPassword';
 import AdminDashboard from './pages/Admin/AdminDashboard'; 
 import WaitingApproval from './pages/Auth/WaitingApproval/WaitingApproval';
 import AdminSidebar from './components/Admin/AdminSidebar'; // جديد
-
+import UsersList from './pages/Admin/UsersList';
 // استيراد الأكشن من سلايس اليوزر
 import { fetchMe } from './redux/slices/userSlice'; 
 
@@ -114,7 +114,7 @@ function App() {
 
         // مسارات العملاء فقط
         { path: "consultants", element: <ClientRoute><Consultants /></ClientRoute> },
-        { path: "ProfilePage", element: <ClientRoute><ProfilePage /></ClientRoute> },
+        { path: "ProfilePage/:id", element: <ClientRoute><ProfilePage /></ClientRoute> },
         { path: "BookingPage", element: <ClientRoute><BookingPage /></ClientRoute> },
         { path: "dashboardclient", element: <ClientRoute><DashboardPage /></ClientRoute> },
         
@@ -129,6 +129,7 @@ function App() {
       element: <AdminRoute><AdminLayout /></AdminRoute>,
       children: [
         { path: "dashboard", element: <AdminDashboard /> },
+        { path: "users", element: <UsersList /> }, 
         // مستقبلاً يمكنك إضافة /admin/users هنا
       ]
     },
